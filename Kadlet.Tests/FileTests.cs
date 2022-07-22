@@ -6,27 +6,19 @@ namespace Kadlet.Tests
 {
     public class FileTests 
     {
-        static HashSet<string> IgnoredTests = new HashSet<string>(new string[] {
-            "sci_notation_large",
-            "sci_notation_small"
-        });
-
         static object[] TestCases = Directory
             .GetFiles("test_cases/input")
             .Select(filename => new object[] { filename })
-            .Where(filename => !IgnoredTests.Contains(Path.GetFileNameWithoutExtension((string) filename[0])))
             .ToArray();
 
         static object[] TypeTests = Directory
             .GetFiles("type_tests/input")
             .Select(filename => new object[] { filename })
-            .Where(filename => !IgnoredTests.Contains(Path.GetFileNameWithoutExtension((string)filename[0])))
             .ToArray();
 
         static object[] EofTests = Directory
             .GetFiles("eof_tests/input")
             .Select(filename => new object[] { filename })
-            .Where(filename => !IgnoredTests.Contains(Path.GetFileNameWithoutExtension((string)filename[0])))
             .ToArray();
 
         private KdlReader _reader;
@@ -59,7 +51,7 @@ namespace Kadlet.Tests
                     if (expected == null) {
                         Assert.Pass();
                     } else {
-                        throw e;
+                        throw new KdlException("Test failed", e, null);
                     }
                 }
 

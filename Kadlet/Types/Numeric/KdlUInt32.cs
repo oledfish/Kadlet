@@ -5,7 +5,7 @@ namespace Kadlet
     /// </summary>
     public class KdlUInt32 : KdlNumber<uint> 
     {
-        public KdlUInt32(uint value, string? type = null) : base(value, type) {
+        public KdlUInt32(uint value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }

@@ -13,5 +13,8 @@ namespace Kadlet
 
         /// <value>Whether the number has an exponent part.</value>
         public bool HasExponent;
+
+        /// <value>Whether the integer and fractional part are composed only of zeroes.</value>
+        public bool OnlyZeroes;
     }
 }

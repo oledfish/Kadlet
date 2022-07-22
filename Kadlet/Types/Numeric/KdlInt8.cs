@@ -5,7 +5,7 @@ namespace Kadlet
     /// </summary>
     public class KdlInt8 : KdlNumber<sbyte> 
     {
-        public KdlInt8(sbyte value, string? type = null) : base(value, type) {
+        public KdlInt8(sbyte value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }

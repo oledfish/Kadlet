@@ -698,16 +698,22 @@ namespace Kadlet
 
             int radix = 10;
             int sign = 1;
+            bool explicitSign = false;
 
             // Without an explicit sign argument, we try looking for one
             // and saving it appropriately
             if (!signChar.HasValue) {
                 if (c == '+' || c == '-') {
                     context.Read();
+
+                    explicitSign = true;
                     sign = (c == '+') ? 1 : -1;
+                    builder.Append((char) c);
                 }
             } else {
+                explicitSign = true;
                 sign = (signChar == '+') ? 1 : -1;
+                builder.Append((char) signChar);
             }
 
             // We look for a digit to start out with
@@ -722,14 +728,17 @@ namespace Kadlet
                     switch (c) {
                         case 'b':
                             radix = 2;
+                            builder.Append((char) c);
                             context.Read();
                             break;
                         case 'o':
                             radix = 8;
+                            builder.Append((char) c);
                             context.Read();
                             break;
                         case 'x':
                             radix = 16;
+                            builder.Append((char) c);
                             context.Read();
                             break;
                     }
@@ -747,7 +756,7 @@ namespace Kadlet
                         (radix == 16 && Util.IsHexadecimalDigit(c)) || 
                         c == '_') 
                     {
-                        if (builder.Length == 1 && c == '_') {
+                        if (builder.Length == 2 && c == '_') {
                             throw new KdlException("Numbers cannot start with an underscore.", context);
                         }
 
@@ -773,6 +782,8 @@ namespace Kadlet
             }
 
             string data = builder.ToString();
+            string trim = (explicitSign) ? data.Substring(1) : data;
+            trim = (radix == 10 ? trim : trim.Substring(2));
 
             // Type overrides, these can throw if the number isn't in a suitable format.
             if (_options.UseTypeAnnotations) {
@@ -786,21 +797,21 @@ namespace Kadlet
                     case "u64":
                         return KdlConvert.ToUInt64(data, radix, type);
                     case "i8":
-                        return KdlConvert.ToInt8(data, (sbyte)sign, radix, type);
+                        return KdlConvert.ToInt8(data, (sbyte) sign, radix, type);
                     case "i16":
-                        return KdlConvert.ToInt16(data, (short)sign, radix, type);
+                        return KdlConvert.ToInt16(data, (short) sign, radix, type);
                     case "i32":
                         return KdlConvert.ToInt32(data, sign, radix, type);
                     case "i64":
                         return KdlConvert.ToInt64(data, sign, radix, type);
                     case "f32":
-                        return KdlConvert.ToFloat32(data, sign, radix, result, type);
+                        return KdlConvert.ToFloat32(data, radix, result, type);
                     case "f64":
                     case "decimal64":
-                        return KdlConvert.ToFloat64(data, sign, radix, result, type);
+                        return KdlConvert.ToFloat64(data, radix, result, type);
                     case "decimal":
                     case "decimal128":
-                        return KdlConvert.ToDecimal(data, sign, radix, result, type);
+                        return KdlConvert.ToDecimal(data, radix, result, type);
                     // case "isize":
                     // case "usize":
                 }
@@ -810,43 +821,43 @@ namespace Kadlet
             // We use 64-bits regardless of size
             if (result.HasPoint || result.HasExponent) {
                 if (_options.PreferSingle) {
-                    return KdlConvert.ToFloat32(data, sign, radix, result, type);
+                    return KdlConvert.ToFloat32(data, radix, result, type);
                 } else if (_options.PreferDecimal) {
-                    return KdlConvert.ToDecimal(data, sign, radix, result, type);
+                    return KdlConvert.ToDecimal(data, radix, result, type);
                 }
 
-                return KdlConvert.ToFloat64(data, sign, radix, result, type);
+                return KdlConvert.ToFloat64(data, radix, result, type);
             }
 
             // Otherwise, the number must be an integer
             // First try 32-bit, then 64-bit, then BigInteger
             try {
-                int number = Convert.ToInt32(data, radix);
+                int number = Convert.ToInt32(trim, radix);
                 if (number < 0) {
                     throw new OverflowException();
                 }
 
                 number *= sign;
-                return new KdlInt32(number, type);
+                return new KdlInt32(number, data, type);
             } catch (OverflowException) {
                 try {
-                    long number = Convert.ToInt64(data, radix);
+                    long number = Convert.ToInt64(trim, radix);
                     if (number < 0) {
                         throw new OverflowException();
                     }
 
                     number *= sign;
-                    return new KdlInt64(number, type);
+                    return new KdlInt64(number, data, type);
                 } catch (OverflowException) {
                     if (radix == 8 || radix == 2) {
                         throw new NotSupportedException("Very large octal or binary numbers are not supported.");
                     }
 
                     NumberStyles styles = (radix == 10) ? NumberStyles.Number : NumberStyles.HexNumber;
-                    BigInteger number = BigInteger.Parse('0' + data, styles);
+                    BigInteger number = BigInteger.Parse('0' + trim, styles);
                     number *= sign;
 
-                    return new KdlBigInteger(number, type);
+                    return new KdlBigInteger(number, data, type);
                 }
             }
         }
@@ -865,12 +876,17 @@ namespace Kadlet
 
             bool point = false;
             bool exponent = false;
+            bool onlyZeroes = true;
 
             // Integer part
             while (true) {
                 c = context.Peek();
 
                 if (Util.IsDecimalDigit(c)) {
+                    if (c != '0') {
+                        onlyZeroes = false;
+                    }
+
                     c = context.Read();
                     builder.Append((char) c);
                 } else if (c == '_') {
@@ -895,6 +911,10 @@ namespace Kadlet
                     c = context.Peek();
 
                     if (Util.IsDecimalDigit(c)) {
+                        if (c != '0') {
+                            onlyZeroes = false;
+                        }
+
                         c = context.Read();
                         builder.Append((char) c);
                     } else if (c == '_') {
@@ -944,7 +964,8 @@ namespace Kadlet
             return new DecimalResult {
                 String = builder.ToString(),
                 HasPoint = point,
-                HasExponent = exponent
+                HasExponent = exponent,
+                OnlyZeroes = onlyZeroes
             };
         }
 

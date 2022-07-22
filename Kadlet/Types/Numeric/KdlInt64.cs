@@ -5,7 +5,7 @@ namespace Kadlet
     /// </summary>
     public class KdlInt64 : KdlNumber<long> 
     {
-        public KdlInt64(long value, string? type = null) : base(value, type) {
+        public KdlInt64(long value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }

@@ -5,7 +5,7 @@ namespace Kadlet
     /// </summary>
     public class KdlUInt64 : KdlNumber<ulong> 
     {
-        public KdlUInt64(ulong value, string? type = null) : base(value, type) {
+        public KdlUInt64(ulong value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }

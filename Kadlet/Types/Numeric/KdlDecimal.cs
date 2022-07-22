@@ -9,9 +9,20 @@ namespace Kadlet
     /// </summary>
     public class KdlDecimal : KdlNumber<decimal> 
     {
-        public KdlDecimal(decimal value, bool point, bool exponent, string? type = null) : base(value, type) {
+        public KdlDecimal(decimal value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
+            : base(value, source, type)
+        {
             HasPoint = point;
             HasExponent = exponent;
+            OnlyZeroes = onlyZeroes;
+        }
+
+        public KdlDecimal(decimal value, string source, string? type = null)
+            : base(value, source, type)
+        {
+            HasPoint = source.Contains(".");
+            HasExponent = source.Contains("E") || source.Contains("e");
+            OnlyZeroes = false;
         }
 
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {

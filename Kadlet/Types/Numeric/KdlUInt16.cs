@@ -5,7 +5,7 @@ namespace Kadlet
     /// </summary>
     public class KdlUInt16 : KdlNumber<ushort> 
     {
-        public KdlUInt16(ushort value, string? type = null) : base(value, type) {
+        public KdlUInt16(ushort value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }

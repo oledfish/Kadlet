@@ -9,12 +9,33 @@ namespace Kadlet
     /// </summary>
     public class KdlFloat64 : KdlNumber<double> 
     {
-        public KdlFloat64(double value, bool point, bool exponent, string? type = null) : base(value, type) {
+        public KdlFloat64(double value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null) 
+            : base(value, source, type) 
+        {
             HasPoint = point;
             HasExponent = exponent;
+            OnlyZeroes = onlyZeroes;
+        }
+
+        public KdlFloat64(double value, string source, string? type = null)
+            : base(value, source, type)
+        {
+            HasPoint = source.Contains(".");
+            HasExponent = source.Contains("E") || source.Contains("e");
+            OnlyZeroes = false;
         }
 
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {
+            // Edge cases where a value too large or too small was rounded to infinity or zero
+            if (Double.IsInfinity(Value) || Value == 0 && !OnlyZeroes) {
+                writer.Write(SourceString
+                    .Replace('E', options.ExponentChar)
+                    .Replace('e', options.ExponentChar)
+                );
+
+                return;
+            }
+
             if (HasExponent) {
                 string format = HasPoint ? "E1" : "E0";
 

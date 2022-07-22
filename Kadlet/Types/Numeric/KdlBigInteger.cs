@@ -9,7 +9,7 @@ namespace Kadlet
     [DebuggerDisplay("{Value}")]
     public class KdlBigInteger : KdlNumber<BigInteger> 
     {
-        public KdlBigInteger(BigInteger value, string? type = null) : base(value, type) {
+        public KdlBigInteger(BigInteger value, string source, string? type = null) : base(value, source, type) {
         }
     }
 }
