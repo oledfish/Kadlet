@@ -11,13 +11,8 @@ namespace Kadlet.Tests
             .Select(filename => new object[] { filename })
             .ToArray();
 
-        static object[] TypeTests = Directory
-            .GetFiles("type_tests/input")
-            .Select(filename => new object[] { filename })
-            .ToArray();
-
-        static object[] EofTests = Directory
-            .GetFiles("eof_tests/input")
+        static object[] AdditionalTests = Directory
+            .GetFiles("additional_tests/input")
             .Select(filename => new object[] { filename })
             .ToArray();
 
@@ -30,8 +25,7 @@ namespace Kadlet.Tests
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
-        [TestCaseSource(nameof(TypeTests))]
-        [TestCaseSource(nameof(EofTests))]
+        [TestCaseSource(nameof(AdditionalTests))]
         public void FileTest(string filename) 
         {
             string? expected = null;
