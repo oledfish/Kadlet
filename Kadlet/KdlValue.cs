@@ -88,6 +88,10 @@ namespace Kadlet
             writer.Write(Convert.ToString(Value) ?? string.Empty);
         }
 
+        public override string ToString() {
+            return $"KdlValue {{ Value={Value}, Type={Type ?? "null"} }}";
+        }
+
         public static implicit operator T(KdlValue<T> v) => v.Value;
     }
 }

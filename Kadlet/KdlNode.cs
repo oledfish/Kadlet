@@ -103,6 +103,7 @@ namespace Kadlet
             }
         }
 
-        public override string ToString() => $"KdlNode {{ Identifier: {Identifier} }}";
+        public override string ToString() => 
+            $"KdlNode {{ Identifier: {Identifier}, Type: {Type ?? "null"}, Properties: [{string.Join(", ", Properties) }], Arguments: [{string.Join(", ", Arguments)}], Children: {Children}";
     } 
 }

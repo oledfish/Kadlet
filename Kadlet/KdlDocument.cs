@@ -40,5 +40,9 @@ namespace Kadlet
                 writer.Write(options.Newline);
             }
         }
+
+        public override string ToString() {
+            return $"KdlDocument {{ Nodes: {{ {string.Join(", ", Nodes)} }} }}";
+        }
     }
 }
