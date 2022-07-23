@@ -3,6 +3,10 @@
 A .NET implementation of a parser for the [KDL Document Language](https://github.com/kdl-org/kdl). Most of its logic
 and structure is based around [kdl4j](https://github.com/hkolbeck/kdl4j) by [hkolbeck](https://github.com/hkolbeck).
 
+# Install
+
+The package is available at [NuGet](https://www.nuget.org/packages/Kadlet).
+
 # Usage
 
 ```csharp
