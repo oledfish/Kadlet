@@ -9,10 +9,10 @@ namespace Kadlet
     internal class KdlIdentifier : IKdlObject
     {
         /// <value>The name for this identifier.</value>
-        public string Name;
+        public string Name { get; }
 
         /// <value>Whether this identifier was parsed as a string or raw string, or as a bare identifier.</value>
-        public bool IsExplicitString;
+        public bool IsExplicitString { get; }
 
         public KdlIdentifier(string name, bool isExplicitString = false) {
             Name = name;

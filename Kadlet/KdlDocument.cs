@@ -8,9 +8,9 @@ namespace Kadlet
     /// </summary>
     public class KdlDocument : IKdlObject
     {
-        public List<KdlNode> Nodes;
+        public IReadOnlyList<KdlNode> Nodes { get; }
 
-        public KdlDocument(List<KdlNode> nodes) {
+        public KdlDocument(IReadOnlyList<KdlNode> nodes) {
             Nodes = nodes;
         }
 

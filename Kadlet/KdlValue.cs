@@ -12,7 +12,8 @@ namespace Kadlet
     public abstract class KdlValue : IKdlObject
     {
         /// <value>The type annotation for this value.</value>
-        public string? Type;
+        public string? Type { get; internal set; }
+        
         protected KdlValue(string? type) {
             Type = type;
         }
@@ -51,7 +52,7 @@ namespace Kadlet
     /// </summary>
     public class KdlValue<T> : KdlValue
     {
-        public T Value;
+        public T Value { get; }
 
         public KdlValue(T value, string? type) : base (type) {
             Value = value;

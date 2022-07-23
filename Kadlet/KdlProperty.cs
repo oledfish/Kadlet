@@ -9,10 +9,10 @@ namespace Kadlet
     internal class KdlProperty : IKdlObject
     {
         /// <value>The identifier for this property.</value>
-        public string Key;
+        public string Key { get; }
 
         /// <value>The value for this property.</value>
-        public KdlValue Value;
+        public KdlValue Value { get; }
 
         public KdlProperty(string key, KdlValue value) {
             Key = key;

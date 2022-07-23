@@ -9,7 +9,7 @@ namespace Kadlet
     [DebuggerDisplay("{Value}")]
     public class KdlNumber<T> : KdlValue<T>
     {   
-        public string SourceString;
+        public string SourceString { get; } 
         protected bool HasPoint = false;
         protected bool HasExponent = false;
         protected bool OnlyZeroes = false;

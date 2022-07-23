@@ -15,16 +15,16 @@ namespace Kadlet
         public string? Type { get; }
 
         /// <value>The unnamed values for this node.</value>
-        public List<KdlValue> Arguments;
+        public IReadOnlyList<KdlValue> Arguments { get; }
 
         /// <value>The named values for this node.</value>
-        public Dictionary<string, KdlValue> Properties;
+        public IReadOnlyDictionary<string, KdlValue> Properties { get; }
 
         /// <value>A <see cref="KdlDocument"/> containing any children nodes.</value>
-        public KdlDocument? Children;
+        public KdlDocument? Children { get; }
 
         /// <value>The depth of this node within the *root* document.</value>
-        internal int HierarchyLevel; 
+        internal int HierarchyLevel { get; }
 
         public KdlNode(string identifier, string? type) {
             Identifier = identifier;
@@ -33,7 +33,7 @@ namespace Kadlet
             Properties = new Dictionary<string, KdlValue>();
         }
 
-        public KdlNode(string identifier, string? type, List<KdlValue> arguments, Dictionary<string, KdlValue> properties, KdlDocument? children, int hierarchyLevel) {
+        public KdlNode(string identifier, string? type, IReadOnlyList<KdlValue> arguments, IReadOnlyDictionary<string, KdlValue> properties, KdlDocument? children, int hierarchyLevel) {
             Identifier = identifier;
             Type = type;
             Arguments = arguments;
