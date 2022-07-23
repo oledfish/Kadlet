@@ -120,8 +120,8 @@ namespace Kadlet
                 throw new KdlException("A node name cannot be confused by a true, false or null value.", context);
             }
 
-            List<KdlValue> props = new List<KdlValue>();
-            Dictionary<string, KdlValue> args = new Dictionary<string, KdlValue>();
+            List<KdlValue> args = new List<KdlValue>();
+            Dictionary<string, KdlValue> props = new Dictionary<string, KdlValue>();
             KdlDocument? children = null;
 
             int c = context.Peek();
@@ -228,19 +228,19 @@ namespace Kadlet
 
                 // Ignore if we have an escape
                 if (!context.EscapeNext) {
-                    if (obj is KdlArgument argument) {
-                        args[argument.Key] = argument.Value;
+                    if (obj is KdlProperty property) {
+                        props[property.Key] = property.Value;
                     }
 
-                    if (obj is KdlValue property) {
-                        props.Add(property);
+                    if (obj is KdlValue argument) {
+                        args.Add(argument);
                     }
                 } else {
                     context.EscapeNext = false;
                 }
             }
 
-            KdlNode node = new KdlNode(identifier, type, props, args, children, level);
+            KdlNode node = new KdlNode(identifier, type, args, props, children, level);
             return node;
         }
 
@@ -685,7 +685,7 @@ namespace Kadlet
         /// Parses a number, which can take several formats: decimal, binary, octal and hex integers as well
         /// as decimal floats.
         /// <br/>
-        /// The stream can start at the sign or it can be passed as an argument, in which case it'll start by seeking a digit.
+        /// The stream can start at the sign or it can be passed as a parameter, in which case it'll start by seeking a digit.
         /// </summary>
         /// <exception cref="KdlException"/>
         /// <exception cref="FormatException"/>
@@ -970,19 +970,19 @@ namespace Kadlet
         }
 
         /// <summary>
-        /// Parses an argument ('name'=value) or a property (a bare value). 
+        /// Parses a property ('name'=value) or an argument (an unnamed value). 
         /// Called in ParseNode after its identifier is obtained.
         /// </summary>
         /// <returns>
-        /// A <see cref="KdlArgument"/> or a <see cref="KdlValue"/>.
+        /// A <see cref="KdlProperty"/> or a <see cref="KdlValue"/>.
         /// </returns>
         /// <exception cref="KdlException"/>
         internal IKdlObject ParseArgumentOrProperty(KdlParseContext context) {
             IKdlObject obj = new KdlNull();
             StringBuilder builder = new StringBuilder();
 
-            // If we have a type in the argument name, that's an error, but
-            // we don't know if we'll have an argument or property yet
+            // If we have a type in the property name, that's an error, but
+            // we don't know if we'll have a property or argument yet
             string? type = ParseType(context);
             int c = context.Peek();
 
@@ -995,10 +995,10 @@ namespace Kadlet
                 If it can produce a number, it'll throw an exception which will be catched
                 and then it will attempt to parse a number. 
 
-                Later, if we don't treat what we found as an argument, those become valid
+                Later, if we don't treat what we found as a property, those become valid
                 values, otherwise they'll throw.
 
-                If it's still an identifier, it'll be valid as an argument always. If we
+                If it's still an identifier, it'll be valid as a property always. If we
                 have a property, it'll check if it's a string, otherwise it'll throw.
             */
 
@@ -1030,10 +1030,10 @@ namespace Kadlet
             // Now we check if this is an argument or a property
             c = context.Peek();
             if (c == '=') {
-                // Either of these can serve as an argument name
+                // Either of these can serve as a property name
                 if (obj is KdlIdentifier || obj is KdlString) {
                     if (type != null) {
-                        throw new KdlException("Argument types must come before the value, not before the name.", context);
+                        throw new KdlException("Property types must come before the value, not before the name.", context);
                     }
 
                     // Consume the '='
@@ -1049,19 +1049,19 @@ namespace Kadlet
                     KdlValue? value = ParseValue(context);
 
                     if (value != null) {
-                        return new KdlArgument(identifier, value);
+                        return new KdlProperty(identifier, value);
                     } else {
-                        throw new KdlException("Could not parse a valid argument value.", context);
+                        throw new KdlException("Could not parse a valid property value.", context);
                     }
                 } else {
-                    throw new KdlException("Argument name must be a valid identifier or a string.", context);
+                    throw new KdlException("Property name must be a valid identifier or a string.", context);
                 }
             } else {
                 if (obj is KdlValue value) {
                     value.Type = type;
                 }
 
-                // Properties that are strings or raw strings are returned as KdlIdentifier,
+                // Arguments that are strings or raw strings are returned as KdlIdentifier,
                 // which can be bare (invalid) or a string or raw string, in which case
                 // we wrap them into a KdlString, otherwise we throw
                 if (obj is KdlIdentifier identifier) {

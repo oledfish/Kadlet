@@ -9,16 +9,16 @@ namespace Kadlet
     public class KdlNode : IKdlObject 
     {
         /// <value>The name for this node.</value>
-        public string Identifier;
+        public string Identifier { get; }
 
         /// <value>The type annotation for this node.</value>
-        public string? Type;
+        public string? Type { get; }
 
         /// <value>The unnamed values for this node.</value>
-        public List<KdlValue> Properties;
+        public List<KdlValue> Arguments;
 
         /// <value>The named values for this node.</value>
-        public Dictionary<string, KdlValue> Arguments;
+        public Dictionary<string, KdlValue> Properties;
 
         /// <value>A <see cref="KdlDocument"/> containing any children nodes.</value>
         public KdlDocument? Children;
@@ -29,11 +29,11 @@ namespace Kadlet
         public KdlNode(string identifier, string? type) {
             Identifier = identifier;
             Type = type;
-            Properties = new List<KdlValue>();
-            Arguments = new Dictionary<string, KdlValue>();
+            Arguments = new List<KdlValue>();
+            Properties = new Dictionary<string, KdlValue>();
         }
 
-        public KdlNode(string identifier, string? type, List<KdlValue> properties, Dictionary<string, KdlValue> arguments, KdlDocument? children, int hierarchyLevel) {
+        public KdlNode(string identifier, string? type, List<KdlValue> arguments, Dictionary<string, KdlValue> properties, KdlDocument? children, int hierarchyLevel) {
             Identifier = identifier;
             Type = type;
             Arguments = arguments;
@@ -65,22 +65,22 @@ namespace Kadlet
 
             Util.WriteQuotedIdentifier(writer, Identifier, options);
 
-            foreach (KdlValue property in Properties) {
-                if (property is KdlNull && !options.PrintNullProperties)
+            foreach (KdlValue argument in Arguments) {
+                if (argument is KdlNull && !options.PrintNullArguments)
                     continue;
 
                 writer.Write(' ');
-                property.Write(writer, options);
+                argument.Write(writer, options);
             }
 
-            foreach (KeyValuePair<string, KdlValue> argument in Arguments) {
-                if (argument.Value is KdlNull && !options.PrintNullArguments)
+            foreach (KeyValuePair<string, KdlValue> property in Properties) {
+                if (property.Value is KdlNull && !options.PrintNullProperties)
                     continue;
     
                 writer.Write(' ');
-                Util.WriteQuotedIdentifier(writer, argument.Key, options);
+                Util.WriteQuotedIdentifier(writer, property.Key, options);
                 writer.Write('=');
-                argument.Value.Write(writer, options);
+                property.Value.Write(writer, options);
             }
 
             if (Children != null && Children.Nodes.Count > 0) {

@@ -3,18 +3,18 @@ using System.IO;
 namespace Kadlet
 {
     /// <summary>
-    /// A class representing an argument in a node. Only used internally, exposed classes always represent
-    /// arguments with a KeyValuePair&lt;string, KdlValue&gt;>.
+    /// A class representing a property in a node. Only used internally, exposed classes always represent
+    /// properties with a KeyValuePair&lt;string, KdlValue&gt;>.
     /// </summary>
-    internal class KdlArgument : IKdlObject
+    internal class KdlProperty : IKdlObject
     {
-        /// <value>The identifier for this argument.</value>
+        /// <value>The identifier for this property.</value>
         public string Key;
 
-        /// <value>The value for this argument.</value>
+        /// <value>The value for this property.</value>
         public KdlValue Value;
 
-        public KdlArgument(string key, KdlValue value) {
+        public KdlProperty(string key, KdlValue value) {
             Key = key;
             Value = value;
         }
