@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Kadlet
@@ -43,6 +45,24 @@ namespace Kadlet
 
         public override string ToString() {
             return $"KdlDocument {{ Nodes: {{ {string.Join(", ", Nodes)} }} }}";
+        }
+
+        public override bool Equals(object? obj) {
+            if (!(obj is KdlDocument other)) {
+                return false;
+            }
+
+            return Nodes.SequenceEqual(other.Nodes);
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new HashCode();
+
+            foreach (KdlNode node in Nodes)
+                hash.Add(node.GetHashCode());
+
+            return hash.ToHashCode();
         }
     }
 }

@@ -1,3 +1,5 @@
+#pragma warning disable CS0659
+
 using System;
 using System.IO;
 using System.Globalization;
@@ -52,6 +54,10 @@ namespace Kadlet
                     writer.Write(Value.ToString("0.0", CultureInfo.GetCultureInfo("en-US")));
                 }
             }
+        }
+
+        public override bool Equals(object? obj) {
+            return obj is KdlFloat32 other && Value.Equals(other.Value) && Type == other.Type;
         }
     }
 }

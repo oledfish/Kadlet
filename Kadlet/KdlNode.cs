@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Kadlet 
@@ -105,5 +107,45 @@ namespace Kadlet
 
         public override string ToString() => 
             $"KdlNode {{ Identifier: {Identifier}, Type: {Type ?? "null"}, Properties: [{string.Join(", ", Properties) }], Arguments: [{string.Join(", ", Arguments)}], Children: {Children}";
+
+        public override bool Equals(object? obj) {
+            if (!(obj is KdlNode other)) {
+                return false;
+            }
+
+            return Identifier == other.Identifier &&
+                Type == other.Type &&
+                Properties.SequenceEqual(other.Properties) &&
+                Arguments.SequenceEqual(other.Arguments) &&
+                Children == other.Children;
+        }
+
+        public override int GetHashCode() {
+            HashCode hash = new HashCode();
+
+            hash.Add(Identifier.GetHashCode());
+
+            if (Type != null)
+                hash.Add(Type.GetHashCode());
+
+            foreach (KeyValuePair<string, KdlValue> property in Properties)
+                hash.Add(property.GetHashCode());
+
+            foreach (KdlValue argument in Arguments)
+                hash.Add(argument.GetHashCode());
+
+            if (Children != null)
+                hash.Add(Children.GetHashCode());
+
+            return hash.ToHashCode();
+        }
+
+        public KdlValue this[int index] {
+            get => Arguments[index];
+        }
+
+        public KdlValue this[string key] {
+            get => Properties[key];
+        }
     } 
 }

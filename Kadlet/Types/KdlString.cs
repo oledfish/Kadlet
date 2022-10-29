@@ -1,4 +1,5 @@
-using System;
+#pragma warning disable CS0659
+
 using System.IO;
 using System.Diagnostics;
 
@@ -15,6 +16,10 @@ namespace Kadlet
 
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {
             Util.WriteEscapedString(writer, Value, options);
+        }
+
+        public override bool Equals(object? obj) {
+            return obj is KdlString other && Value.Equals(other.Value) && Type == other.Type;
         }
     }
 }

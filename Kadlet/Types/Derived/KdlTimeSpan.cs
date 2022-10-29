@@ -1,5 +1,6 @@
+#pragma warning disable CS0659
+
 using System;
-using System.IO;
 
 namespace Kadlet
 {
@@ -9,6 +10,10 @@ namespace Kadlet
     public class KdlTimeSpan : KdlValue<TimeSpan>
     {
         public KdlTimeSpan(TimeSpan value, string? type = null) : base(value, type) {
+        }
+
+        public override bool Equals(object? obj) {
+            return obj is KdlTimeSpan other && Value.Equals(other.Value) && Type == other.Type;
         }
     }
 }

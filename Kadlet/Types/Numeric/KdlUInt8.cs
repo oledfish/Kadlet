@@ -1,3 +1,5 @@
+#pragma warning disable CS0659
+
 namespace Kadlet
 {
     /// <summary>
@@ -6,6 +8,10 @@ namespace Kadlet
     public class KdlUInt8 : KdlNumber<byte> 
     {
         public KdlUInt8(byte value, string source, string? type = null) : base(value, source, type) {
+        }
+
+        public override bool Equals(object? obj) {
+            return obj is KdlUInt8 other && Value.Equals(other.Value) && Type == other.Type;
         }
     }
 }

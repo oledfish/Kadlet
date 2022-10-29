@@ -1,8 +1,6 @@
-#pragma warning disable CS8618
-#pragma warning disable CS8601
-
 using System;
 using System.IO;
+using System.Numerics;
 
 namespace Kadlet
 {
@@ -21,36 +19,42 @@ namespace Kadlet
         /// <summary>
         /// Returns a string representation of the underlying value.
         /// </summary>
-        public virtual string ToKdlString() {
-            return string.Empty;
-        }
+        public abstract string ToKdlString();
 
         /// <summary>
         /// Returns a string representation of the underlying value.
         /// </summary>
-        public virtual string ToKdlString(KdlPrintOptions options) {
-            return string.Empty;
-        }
+        public abstract string ToKdlString(KdlPrintOptions options);
 
         /// <summary>
         /// Writes the type annotation followed by the value as valid KDL.
         /// </summary>
-        public virtual void Write(TextWriter writer, KdlPrintOptions options) {
-
-        }
+        public abstract void Write(TextWriter writer, KdlPrintOptions options);
 
         /// <summary>
         /// Writes only the underlying value as valid KDL.
         /// </summary>
-        public virtual void WriteValue(TextWriter writer, KdlPrintOptions options) {
+        public abstract void WriteValue(TextWriter writer, KdlPrintOptions options);
 
+        /// <summary>
+        /// Writes only the type annotation.
+        /// </summary>
+        protected void WriteType(TextWriter writer, KdlPrintOptions options) {
+            if (Type != null) {
+                writer.Write('(');
+                Util.WriteQuotedIdentifier(writer, Type, options);
+                writer.Write(')');
+            }
         }
+
+        public abstract override bool Equals(object? obj);
+        public abstract override int GetHashCode();
     }
 
     /// <summary>
     /// An utility wrapper for C# object types, including a type annotation.
     /// </summary>
-    public class KdlValue<T> : KdlValue
+    public abstract class KdlValue<T> : KdlValue
     {
         public T Value { get; }
 
@@ -74,12 +78,7 @@ namespace Kadlet
         // so this avoids some repetition by not having to always define them
         // as being written with quotes.
         public override void Write(TextWriter writer, KdlPrintOptions options) {
-            if (Type != null) {
-                writer.Write('(');
-                Util.WriteQuotedIdentifier(writer, Type, options);
-                writer.Write(')');
-            }
-
+            WriteType(writer, options);
             writer.Write('"');
             WriteValue(writer, options);
             writer.Write('"');
@@ -91,6 +90,25 @@ namespace Kadlet
 
         public override string ToString() {
             return $"KdlValue {{ Value={Value}, Type={Type ?? "null"} }}";
+        }
+
+        public override bool Equals(object? obj) {
+            if (Value == null || obj == null)
+                return false;
+
+            return obj is KdlNumber<T> other && other.Value != null && Value.Equals(other.Value) && Type == other.Type;
+        }
+
+        public override int GetHashCode() {
+            HashCode hash = new HashCode();
+
+            if (Value != null)
+                hash.Add(Value.GetHashCode());
+
+            if (Type != null)
+                hash.Add(Type.GetHashCode());
+
+            return hash.ToHashCode();
         }
 
         public static implicit operator T(KdlValue<T> v) => v.Value;

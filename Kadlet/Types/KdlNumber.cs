@@ -7,7 +7,7 @@ namespace Kadlet
     /// A <see cref="KdlValue"/> with some extra fields for numbers.
     /// </summary>
     [DebuggerDisplay("{Value}")]
-    public class KdlNumber<T> : KdlValue<T>
+    public abstract class KdlNumber<T> : KdlValue<T>
     {   
         public string SourceString { get; } 
         protected bool HasPoint = false;
@@ -19,12 +19,7 @@ namespace Kadlet
         }
 
         public override void Write(TextWriter writer, KdlPrintOptions options) {
-            if (Type != null) {
-                writer.Write('(');
-                Util.WriteQuotedIdentifier(writer, Type, options);
-                writer.Write(')');
-            }
-
+            WriteType(writer, options);
             WriteValue(writer, options);
         }
 

@@ -1,5 +1,6 @@
+#pragma warning disable CS0659
+
 using System;
-using System.IO;
 
 namespace Kadlet
 {
@@ -9,6 +10,10 @@ namespace Kadlet
     public class KdlDateTime : KdlValue<DateTime>
     {
         public KdlDateTime(DateTime value, string? type = null) : base(value, type) {
+        }
+
+        public override bool Equals(object? obj) {
+            return obj is KdlDateTime other && Value.Equals(other.Value) && Type == other.Type;
         }
     }
 }
