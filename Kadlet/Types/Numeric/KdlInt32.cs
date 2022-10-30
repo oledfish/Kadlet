@@ -7,8 +7,8 @@ namespace Kadlet
     /// </summary>
     public class KdlInt32 : KdlNumber<int> 
     {
-        public KdlInt32(int value, string source, string? type = null) : base(value, source, type) {
-        }
+        public KdlInt32(int value, string source, string? type = null) : base(value, source, type) {}
+        public KdlInt32(int value, string? type = null) : base(value, type) {}
 
         public override bool Equals(object? obj) {
             return obj is KdlInt32 other && Value.Equals(other.Value) && Type == other.Type;

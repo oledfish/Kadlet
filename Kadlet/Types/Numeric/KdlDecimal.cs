@@ -11,7 +11,7 @@ namespace Kadlet
     /// </summary>
     public class KdlDecimal : KdlNumber<decimal> 
     {
-        public KdlDecimal(decimal value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
+        internal KdlDecimal(decimal value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
             : base(value, source, type)
         {
             HasPoint = point;
@@ -24,6 +24,12 @@ namespace Kadlet
         {
             HasPoint = source.Contains(".");
             HasExponent = source.Contains("E") || source.Contains("e");
+            OnlyZeroes = false;
+        }
+
+        public KdlDecimal(decimal value, string? type = null) : base(value, type) {
+            HasPoint = false;
+            HasExponent = false;
             OnlyZeroes = false;
         }
 

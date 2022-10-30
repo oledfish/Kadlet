@@ -11,8 +11,8 @@ namespace Kadlet
     [DebuggerDisplay("{Value}")]
     public class KdlBigInteger : KdlNumber<BigInteger> 
     {
-        public KdlBigInteger(BigInteger value, string source, string? type = null) : base(value, source, type) {
-        }
+        public KdlBigInteger(BigInteger value, string source, string? type = null) : base(value, source, type) {}
+        public KdlBigInteger(BigInteger value, string? type = null) : base(value, type) {}
 
         public override bool Equals(object? obj) {
             return obj is KdlBigInteger other && Value.Equals(other.Value) && Type == other.Type;

@@ -11,7 +11,7 @@ namespace Kadlet
     /// </summary>
     public class KdlFloat32 : KdlNumber<float> 
     {
-        public KdlFloat32(float value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
+        internal KdlFloat32(float value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
             : base(value, source, type)
         {
             HasPoint = point;
@@ -27,15 +27,48 @@ namespace Kadlet
             OnlyZeroes = false;
         }
 
+        public KdlFloat32(float value, string? type = null) : base(value, type) {
+            HasPoint = false;
+            HasExponent = false;
+            OnlyZeroes = false;
+        }
+
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {
-            // Edge cases where a value too large or too small was rounded to infinity or zero
-            if (Single.IsInfinity(Value) || Value == 0 && !OnlyZeroes) {
+            // Edge cases where a value too large or too small was rounded to infinity or zero,
+            // we rely on the original string to round-trip
+            if (SourceString != null && (Single.IsInfinity(Value) || Value == 0 && !OnlyZeroes)) {
                 writer.Write(SourceString
                     .Replace('E', options.ExponentChar)
                     .Replace('e', options.ExponentChar)
                 );
 
                 return;
+            }
+
+            // Safeguards for values constructed manually, so that a round-trip can work
+            if (SourceString == null) {
+                if (Single.IsPositiveInfinity(Value)) {
+                    writer.Write(Single.MaxValue.ToString(CultureInfo.GetCultureInfo("en-US"))
+                        .Replace('E', options.ExponentChar)
+                        .Replace('e', options.ExponentChar)
+                    );
+
+                    return;
+                }
+
+                if (Single.IsNegativeInfinity(Value)) {
+                    writer.Write(Single.MinValue.ToString(CultureInfo.GetCultureInfo("en-US"))
+                        .Replace('E', options.ExponentChar)
+                        .Replace('e', options.ExponentChar)
+                    );
+
+                    return;
+                }
+
+                if (Single.IsNaN(Value)) {
+                    writer.Write("0.0");
+                    return;
+                }
             }
 
             if (HasExponent) {

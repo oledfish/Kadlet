@@ -7,8 +7,8 @@ namespace Kadlet
     /// </summary>
     public class KdlInt16 : KdlNumber<short> 
     {
-        public KdlInt16(short value, string source, string? type = null) : base(value, source, type) {
-        }
+        public KdlInt16(short value, string source, string? type = null) : base(value, source, type) {}
+        public KdlInt16(short value, string? type = null) : base(value, type) { }
 
         public override bool Equals(object? obj) {
             return obj is KdlInt16 other && Value.Equals(other.Value) && Type == other.Type;

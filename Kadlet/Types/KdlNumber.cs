@@ -9,13 +9,17 @@ namespace Kadlet
     [DebuggerDisplay("{Value}")]
     public abstract class KdlNumber<T> : KdlValue<T>
     {   
-        public string SourceString { get; } 
+        public string? SourceString { get; } 
         protected bool HasPoint = false;
         protected bool HasExponent = false;
         protected bool OnlyZeroes = false;
         
         public KdlNumber(T value, string source, string? type = null) : base(value, type) {
             SourceString = source;
+        }
+
+        public KdlNumber(T value, string? type = null) : base(value, type) {
+            SourceString = null;
         }
 
         public override void Write(TextWriter writer, KdlPrintOptions options) {
