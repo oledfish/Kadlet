@@ -14,7 +14,7 @@ using System.IO;
 using Kadlet;
 
 // ...
-KdlReader reader = new KdlReader(KdlPrintOptions.PrettyPrint);
+KdlReader reader = new KdlReader();
 
 using (FileStream fs = File.OpenRead("file.kdl")) {
     KdlDocument document = reader.Parse(fs);
@@ -43,8 +43,8 @@ Console.Write(overrides.ToKdlString());
 
 // Output:
 //
-// node (u8)123
-// node (f32)123.0
+// node (u8)123 // Internally a KdlUInt8
+// node (f32)123.0 // Interally a KdlFloat32
 ```
 
 All numeric overrides are supported save for ``isize`` and ``usize``, which are ignored. The following string overrides are supported.
@@ -60,16 +60,16 @@ All numeric overrides are supported save for ``isize`` and ``usize``, which are 
 
 ## Custom type annotations
 
-It's possible to define string overrides for custom types.
+It's possible to define string overrides for custom types. A converter function must conform to the ``KdlTypeConverter`` delegate.
 
 ```csharp
 public enum Color { Red = 1, Green = 2, Blue = 3 };
         
-// ...
+// public delegate KdlValue KdlTypeConverter(string input, string type, KdlReaderOptions options);
 
 Dictionary<string, KdlTypeConverter> converters = new Dictionary<string, KdlTypeConverter> {
-    {"hex", (input, type) => new KdlByteArray(Convert.FromHexString(input), type)},
-    {"color", (input, type) => new KdlEnum(Enum.Parse<Color>(input, true), type)} // slow due to Enum.Parse
+    {"hex", (input, type, options) => new KdlByteArray(Convert.FromHexString(input), type)},
+    {"color", (input, type, options) => new KdlEnum(Enum.Parse<Color>(input, true), type)} // slow due to Enum.Parse
 };
 
 KdlReader reader = new KdlReader(new KdlReaderOptions {
