@@ -22,5 +22,10 @@ namespace Kadlet
 
         /// <value>When reading a (<see cref="regex"/>) annotated string and with converters enabled, these will be passed to the constructor.</value>
         public RegexOptions RegexOptions = RegexOptions.None;
+
+        /// <value>A configuration that ignores type overrides before values such as (u8), (u16), (f32), etc.</value>
+        public static KdlReaderOptions IgnoreTypeOverrides = new KdlReaderOptions {
+            UseTypeAnnotations = false,
+        };
     }
 }
