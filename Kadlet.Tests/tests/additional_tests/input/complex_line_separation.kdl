@@ -1,0 +1,10 @@
+node 1 \
+    2 \ // single-line comment
+    3 \ /* multi-line comment */
+    4 \ /* multi-line comment
+        spanning
+        a
+        few
+        lines
+        */
+    5 \ /* multi-line comment */ // followed by a single-line one

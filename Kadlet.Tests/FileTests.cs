@@ -39,17 +39,15 @@ namespace Kadlet.Tests
             {
                 KdlDocument? document = null;
 
-                try {
+                if (expected != null) {
                     document = _reader.Parse(fs);
-                } catch (Exception e) {
-                    if (expected == null) {
+                } else {
+                    try {
+                        document = _reader.Parse(fs);
+                    } catch (Exception) {
                         Assert.Pass();
-                    } else {
-                        throw new KdlException("Test failed", e, null);
                     }
-                }
 
-                if (expected == null) {
                     Assert.Fail("Test expected to fail but succeeded.");
                 }
 

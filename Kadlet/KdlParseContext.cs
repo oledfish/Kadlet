@@ -7,14 +7,14 @@ namespace Kadlet
     /// </summary>
     public class KdlParseContext
     {
-        public TextReader Reader;
+        public PushBackReader Reader;
         public bool EscapeNext;
         public int LinePosition;
         public int Line;
         public bool Invalid;
 
         public KdlParseContext(TextReader reader) {
-            Reader = reader;
+            Reader = new PushBackReader(reader, 2);
             EscapeNext = false;
             LinePosition = 0;
             Line = 1;
@@ -53,6 +53,63 @@ namespace Kadlet
             }
 
             return Reader.Peek();
+        }
+
+        public void Unread(int c)
+        {
+            if (Invalid) {
+                throw new KdlException("Can't operate within an invalid context.", null);
+            }
+
+            if (Util.IsNewline(c)) {
+                throw new KdlException("Attempted to Unread() a newline.", null);
+            } else if (c == Util.EOF) {
+                throw new KdlException("Attempted to Unread() EOF.", null);
+            } else {
+                LinePosition--;
+            }
+
+            try {
+                Reader.Unread(c);
+            } catch (IOException) {
+                throw new KdlException("Attempted to unread more than 2 characters in sequence", null);
+            }
+        }
+    }
+
+    public class PushBackReader 
+    {
+        private readonly TextReader _reader;
+        private readonly int[] _queue;
+        private int _position = 0;
+
+        public PushBackReader(TextReader reader, int pushbackLimit) {
+            _reader = reader;
+            _queue = new int[pushbackLimit];
+        }
+
+        public int Peek() {
+            if (_position > 0) {
+                return _queue[_position - 1];
+            }
+
+            return _reader.Peek();
+        }
+
+        public int Read() {
+            if (_position > 0) {
+                return _queue[(_position--) - 1];
+            }
+
+            return _reader.Read();
+        }
+
+        public void Unread(int value) {
+            if (_position >= _queue.Length) {
+                throw new IOException("PushBackReader buffer length exceeded");
+            }
+
+            _queue[_position++] = value;
         }
     }
 }

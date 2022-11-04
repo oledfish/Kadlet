@@ -8,20 +8,21 @@ namespace Kadlet
     internal static class Util 
     {
         internal static readonly int EOF = -1;
+        internal static readonly int BOM = 0xFEFF;
         internal static readonly int MinUnicode = 0x20;
         internal static readonly int MaxUnicode = 0x10FFFF;
 
         /// <summary>
         /// Checks whether a string is "true", "false", or "null".
         /// </summary>
-        public static bool IsKeyword(string str) {
+        internal static bool IsKeyword(string str) {
             return string.Equals(str, "null") || string.Equals(str, "true") || string.Equals(str, "false");
         }
 
         /// <summary>
         /// Checks whether a character is found in "true", "false", or "null"
         /// </summary>
-        public static bool IsKeywordCharacter(int c) {
+        internal static bool IsKeywordCharacter(int c) {
             switch (c) {
                 case 'n':
                 case 'u':
@@ -42,56 +43,56 @@ namespace Kadlet
         /// <summary>
         /// Checks whether a character is a digit between 0 and 9.
         /// </summary>
-        public static bool IsDecimalDigit(int c) {
+        internal static bool IsDecimalDigit(int c) {
             return (c >= '0' && c <= '9');
         }
 
         /// <summary>
         /// Checks whether a character is 0 or 1.
         /// </summary>
-        public static bool IsBinaryDigit(int c) {
+        internal static bool IsBinaryDigit(int c) {
             return (c == '0') || (c == '1');
         }
 
         /// <summary>
         /// Checks whether a character is a digit between 0 and 7.
         /// </summary>
-        public static bool IsOctalDigit(int c) {
+        internal static bool IsOctalDigit(int c) {
             return (c >= '0' && c <= '7');
         }
 
         /// <summary>
         /// Checks whether a character is a digit between 0 and 9, or letters from a-f or A-F.
         /// </summary>
-        public static bool IsHexadecimalDigit(int c) {
+        internal static bool IsHexadecimalDigit(int c) {
             return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
         }
 
         /// <summary>
         /// Checks whether a character is a digit between 0 and 9, an exponent marker ('E' or 'e'), or a plus or minus sign.
         /// </summary>
-        public static bool IsFloatingDigit(int c) {
+        internal static bool IsFloatingDigit(int c) {
             return (c == 'e' || c == 'E') || (c == '+' || c == '-') || (c == '.');
         }
 
         /// <summary>
         /// Checks whether a character is a digit between 0 and 9 or a plus or minus sign.
         /// </summary>
-        public static bool IsValidInitialNumeric(int c) {
+        internal static bool IsValidInitialNumeric(int c) {
             return (c >= '0' && c <= '9') || (c == '+' || c == '-');
         }
 
         /// <summary>
         /// Checks whether a character can start a bare identifier.
         /// </summary>
-        public static bool IsValidInitialCharacter(int c) {
+        internal static bool IsValidInitialCharacter(int c) {
             return !IsDecimalDigit(c) && IsValidIdentifierCharacter(c);
         }
 
         /// <summary>
         /// Checks whether a character is valid for a bare identifier.
         /// </summary>
-        public static bool IsValidIdentifierCharacter(int c) {
+        internal static bool IsValidIdentifierCharacter(int c) {
             if (c <= MinUnicode || c > MaxUnicode) {
                 return false;
             }
@@ -120,7 +121,7 @@ namespace Kadlet
         /// <summary>
         /// Checks whether a character represents empty space.
         /// </summary>
-        public static bool IsWhitespace(int c) {
+        internal static bool IsWhitespace(int c) {
             switch (c) {
                 case '\u0009': // Character Tabulation
                 case '\u0020': // Space
@@ -149,7 +150,7 @@ namespace Kadlet
         /// <summary>
         /// Checks whether a character represents a newline.
         /// </summary>
-        public static bool IsNewline(int c) {
+        internal static bool IsNewline(int c) {
             switch (c) {
                 case '\u000D': // Carriage Return
                 case '\u000A': // Line Feed
@@ -166,14 +167,14 @@ namespace Kadlet
         /// <summary>
         /// Checks whether a character can end a node, which can be a semicolon, a newline, or EOF.
         /// </summary>
-        public static bool IsNodeTerminator(int c) {
+        internal static bool IsNodeTerminator(int c) {
             return c == EOF || c == ';' || IsNewline(c);
         }
 
         /// <summary>
         /// Checks whether a string is a valid bare identifier.
         /// </summary>
-        public static bool IsBareIdentifier(string id) {
+        internal static bool IsBareIdentifier(string id) {
             if (id.Length == 0) {
                 return false;
             }
@@ -200,7 +201,7 @@ namespace Kadlet
         /// <summary>
         /// Writes a string escaping some characters according to the settings in KdlPrintOptions.
         /// </summary>
-        public static void WriteEscapedString(TextWriter writer, string str, KdlPrintOptions options) {
+        internal static void WriteEscapedString(TextWriter writer, string str, KdlPrintOptions options) {
             foreach (int c in str) {
                 writer.Write(EscapeCharacter(c, options));
             }
@@ -209,7 +210,7 @@ namespace Kadlet
         /// <summary>
         /// Returns the escaped representation of a character, if needed, otherwise the same character is returned.
         /// </summary>
-        public static string EscapeCharacter(int c, KdlPrintOptions options) {
+        internal static string EscapeCharacter(int c, KdlPrintOptions options) {
             bool escape = false;
             if (c == '\\' || c == '\"') {
                 escape = true;
@@ -252,7 +253,7 @@ namespace Kadlet
         /// <summary>
         /// Checks whether the character is CR, LF, a backspace, a tab or a form feed.
         /// </summary>
-        public static bool IsCommonEscape(int c) {
+        internal static bool IsCommonEscape(int c) {
             switch (c) {
                 case '\\':
                 case '\r':
@@ -270,7 +271,7 @@ namespace Kadlet
         /// <summary>
         /// Checks whether the character is Unicode values U+202A to U+202E, or U+2066 to +U2069.
         /// </summary>
-        public static bool IsPotentiallyDangerousUnicode(int c) {
+        internal static bool IsPotentiallyDangerousUnicode(int c) {
             switch (c) {
                 case '\u202A':
                 case '\u202B':
@@ -291,7 +292,7 @@ namespace Kadlet
         /// Writes an identifier. If it's a valid bare identifier it is printed as-is, otherwise
         /// it's printed as a quoted escaped string.
         /// </summary>
-        public static void WriteQuotedIdentifier(TextWriter writer, string id, KdlPrintOptions options) {
+        internal static void WriteQuotedIdentifier(TextWriter writer, string id, KdlPrintOptions options) {
             if (IsBareIdentifier(id)) {
                 writer.Write(id);
             } else {

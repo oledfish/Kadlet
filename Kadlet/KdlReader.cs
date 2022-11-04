@@ -70,10 +70,8 @@ namespace Kadlet
             List<KdlNode> nodes = new List<KdlNode>();
 
             int c;
-            bool escapeNext = false;
             while (true) {
-                BlankResult result = ParseBlank(context);
-                escapeNext |= result.EscapeNext;
+                ParseLinespace(context);
                 
                 c = context.Peek();
                 if (c == Util.EOF) {
@@ -95,13 +93,12 @@ namespace Kadlet
                     }
                 }
 
+                EscapeNodespaceResult result = ParseEscapeAndNodespace(context);
                 KdlNode node = ParseNode(context, level);
 
                 // Ignore if we have an escape.
-                if (!escapeNext) {
+                if (!result.Escape && node != null) {
                     nodes.Add(node);
-                } else {
-                    escapeNext = false;
                 }
             };
 
@@ -124,14 +121,11 @@ namespace Kadlet
             Dictionary<string, KdlValue> props = new Dictionary<string, KdlValue>();
             KdlDocument? children = null;
 
-            int c = context.Peek();
-
             while (true) {
-                // Escapes following an escape must be ignored
-                BlankResult result = ParseNodespace(context);
-                context.EscapeNext |= result.EscapeNext;
+                // Look for nodespace following the identifier
+                bool nodespace = ParseNodespace(context);
 
-                c = context.Peek();
+                int c = context.Peek();
 
                 // Check for a semicolon, a newline, or EOF
                 if (Util.IsNodeTerminator(c)) {
@@ -140,72 +134,39 @@ namespace Kadlet
                     }
 
                     break;
-                } else { // ...or a single-line comment
-                    if (result.LineComment) {
-                        ParseLineComment(context);
-                        break;
-                    }
+                } else if (c == '/') {
+                    c = context.Read();
+                    c = context.Peek();
 
                     if (c == '/') {
                         context.Read();
-                        c = context.Peek();
-
-                        if (c == '/') {
-                            context.Read();
-                            ParseLineComment(context);
-                            break;
-                        } else {
-                            throw new KdlException($"Unexpected character after node: {(char) c}", context);
-                        }
+                        ParseLineComment(context);
+                        break;
+                    } else if (c == '-') {
+                        context.Unread('/');
+                    } else {
+                        throw new KdlException($"Unexpected character after node: {(char)c}", context);
                     }
                 }
 
-                // Line continuation
-                if (c == '\\') {
-                    bool isComment = false;
-                    c = context.Read();
-
-                    while (true) {
-                        c = context.Read();
-
-                        // Continue until a newline
-                        if (Util.IsNewline(c) || c == Util.EOF) {
-                            break;
-                        }
-
-                        if (!isComment) {
-                            if (c == '/') {
-                                c = context.Read();
-                                if (c == '/') {
-                                    isComment = true;
-                                    continue;
-                                } else {
-                                    throw new KdlException("Unexpected stray /.", context);
-                                }
-                            } else if (c != '\\' && !Util.IsWhitespace(c)) {
-                                throw new KdlException($"Unexpected character in node declaration: {(char) c}", context);
-                            }
-                        }
-                    }
-
-                    continue;
-                }
+                // Look for an escape and any following nodespace
+                EscapeNodespaceResult result = ParseEscapeAndNodespace(context);
+                nodespace |= result.Found;
 
                 // We try parsing a child node
+                c = context.Peek();
                 if (c == '{') {
                     context.Read();
                     KdlDocument document = Parse(context, level + 1);
 
                     // Ignore if there was an escape immediately behind
-                    if (!context.EscapeNext) {
+                    if (!result.Escape) {
                         children = document;
-                    } else {
-                        context.EscapeNext = false;
                     }
                     
-                    // Optionally, there may be more nodespace after the closing '}', or a terminator
-                    BlankResult subResult = ParseNodespace(context);
-                    context.EscapeNext |= subResult.EscapeNext;
+                    // Optionally, there may be whitespace after the closing '}', followed by possible nodespace, or a terminator
+                    ParseWhitespace(context);
+                    ParseNodespace(context);
 
                     c = context.Peek();
                     if (Util.IsNodeTerminator(c)) {
@@ -220,14 +181,14 @@ namespace Kadlet
                 // In some edge cases, a value will be returned before it becomes invalid,
                 // but the tokens following immediately compose a valid value.
                 // This must throw, and we do it by checking if there's no space between.
-                if (result.Empty) {
+                if (!nodespace) {
                     throw new KdlException("Arguments or properties must have space between them.", context);
                 }
 
                 IKdlObject obj = ParseArgumentOrProperty(context);
 
                 // Ignore if we have an escape
-                if (!context.EscapeNext) {
+                if (!result.Escape && obj != null) {
                     if (obj is KdlProperty property) {
                         props[property.Key] = property.Value;
                     }
@@ -235,8 +196,6 @@ namespace Kadlet
                     if (obj is KdlValue argument) {
                         args.Add(argument);
                     }
-                } else {
-                    context.EscapeNext = false;
                 }
             }
 
@@ -261,7 +220,7 @@ namespace Kadlet
 
             // Otherwise, we check for the start of a bare identifier
             if (!Util.IsValidInitialCharacter(c)) {
-                throw new KdlException("Identifiers cannot start with a digit or an invalid identifier character (\\/(){}<>;[]=,)", context);
+                throw new KdlException("Identifiers cannot start with a digit or an invalid identifier character (\\/(){}<>;[]=,), found " + $"({(char) c}).", context);
             }
 
             // An 'r' can continue into a raw string or a bare identifier, we try a raw string first
@@ -302,7 +261,7 @@ namespace Kadlet
             while (true) {
                 c = context.Peek();
 
-                if (c == Util.EOF || Util.IsWhitespace(c)) {
+                if (c == Util.EOF || Util.IsWhitespace(c) || c == Util.BOM) {
                     break;
                 }
 
@@ -978,7 +937,7 @@ namespace Kadlet
         /// </returns>
         /// <exception cref="KdlException"/>
         internal IKdlObject ParseArgumentOrProperty(KdlParseContext context) {
-            IKdlObject obj = new KdlNull();
+            IKdlObject obj = KdlNull.Instance;
             StringBuilder builder = new StringBuilder();
 
             // If we have a type in the property name, that's an error, but
@@ -1066,7 +1025,7 @@ namespace Kadlet
                 // we wrap them into a KdlString, otherwise we throw
                 if (obj is KdlIdentifier identifier) {
                     if (!identifier.IsExplicitString) {
-                        throw new KdlException("Properties can't be bare identifiers.", context);
+                        throw new KdlException("Arguments can't be bare identifiers.", context);
                     } else {
                         obj = new KdlString(identifier.Name, type);
                     }
@@ -1084,14 +1043,67 @@ namespace Kadlet
         /// <summary>
         /// Consumes all whitespace, leaving the stream where it's over.
         /// </summary>
-        internal void ParseWhitespace(KdlParseContext context) {
+        internal WhitespaceResult ParseWhitespace(KdlParseContext context) {
+            WhitespaceResult result = new WhitespaceResult {
+                Found = false,
+                StoppedAtLine = false
+            };
+
+            while (true) {
+                int c = context.Peek();
+
+                if (Util.IsWhitespace(c) || c == Util.BOM) {
+                    context.Read();
+                    result.Found = true;
+                } else if (c == '/') {
+                    result.Found = true;
+                    c = context.Read();
+                    c = context.Peek();
+                    
+                    if (c == '*') {
+                        c = context.Read();
+                        ParseBlockComment(context);
+                    } else if (c == '-' || c == '/') {
+                        context.Unread('/');
+                        result.StoppedAtLine = true;
+
+                        return result;
+                    } else {
+                        throw new KdlException("Found stray / where whitespace was expected.", context);
+                    }
+                } else {
+                    return result;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Consumes all space between nodes, including whitespace, newlines and comments.
+        /// </summary>
+        internal void ParseLinespace(KdlParseContext context) {
             int c = context.Peek();
 
             while (true) {
                 c = context.Peek();
 
-                if (Util.IsWhitespace(c)) {
+                if (Util.IsWhitespace(c) || Util.IsNewline(c) || c == Util.BOM) {
                     context.Read();
+                } else if (c == '/') {
+                    c = context.Read();
+                    c = context.Peek();
+
+                    if (c == '/') {
+                        context.Read();
+                        ParseLineComment(context);
+                    } else if (c == '*') {
+                        context.Read();
+                        ParseBlockComment(context);
+                    } else if (c == '-') {
+                        context.Unread('/');
+                        return;
+                    } else {
+                        throw new KdlException("Found stray / where whitespace was expected.", context);
+                    }
                 } else {
                     return;
                 }
@@ -1099,38 +1111,58 @@ namespace Kadlet
         }
 
         /// <summary>
-        /// Consumes space between node contents.
+        /// Consumes a line continuation, including whitespace and single-line comments.
         /// </summary>
-        internal BlankResult ParseNodespace(KdlParseContext context) {
-            BlankResult result = new BlankResult{
-                Empty = true
+        internal bool ParseEscline(KdlParseContext context) {
+            int c = context.Peek();
+
+            if (c == '\\') {
+                c = context.Read();
+                ParseWhitespace(context);
+                c = context.Peek();
+
+                if (c == '/') {
+                    c = context.Read();
+                    c = context.Read();
+
+                    if (c == '/') {
+                        ParseLineComment(context);
+                        return true;
+                    } else {
+                        throw new KdlException($"Found stray ({(char) c}) where a comment or newline was expected.", context);
+                    }
+                } else if (Util.IsNewline(c)) {
+                    c = context.Read(); 
+                    return true;
+                } else {
+                    throw new KdlException($"Found stray ({(char) c}) where a comment or newline was expected.", context);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Consumes an escape (/-), and if found, all following nodespace.
+        /// </summary>
+        internal EscapeNodespaceResult ParseEscapeAndNodespace(KdlParseContext context) {
+            EscapeNodespaceResult result = new EscapeNodespaceResult{
+                Found = false,
+                Escape = false,
             };
 
-            while (true) {
-                int c = context.Peek();
+            int c = context.Peek();
 
-                // Possible comment or escape
-                if (Util.IsWhitespace(c) || c == '/') {
-                    c = context.Read();
-                    result.Empty = false;
-                    if (c == '/') {
-                        c = context.Read();
-                        switch (c) {
-                            case '-':
-                                result.EscapeNext = true;
-                                break;
-                            case '*':
-                                ParseBlockComment(context);
-                                break;
-                            case '/':
-                                result.LineComment = true;
-                                return result;
-                            default:
-                                throw new KdlException("Unexpected stray /.", context);
-                        }
-                    }
+            if (c == '/') {
+                c = context.Read();
+                c = context.Read();
+
+                if (c == '-') {
+                    result.Found = ParseNodespace(context);
+                    result.Escape = true;
+                    return result;
                 } else {
-                    break;
+                    throw new KdlException($"Found stray ({(char) c}) where a node/property/argument/children escape was expected.", context);
                 }
             }
             
@@ -1138,43 +1170,25 @@ namespace Kadlet
         }
 
         /// <summary>
-        /// Consumes all space between nodes, including newlines, comments and escape lines.
+        /// Consumes space between node contents.
         /// </summary>
-        internal BlankResult ParseBlank(KdlParseContext context) {
-            int c = context.Peek();
-            BlankResult result = new BlankResult{};
+        internal bool ParseNodespace(KdlParseContext context) {
+            bool nodespace = false;
 
             while (true) {
-                c = context.Peek();
+                WhitespaceResult res1 = ParseWhitespace(context);
+                bool escline = ParseEscline(context);
+                WhitespaceResult res2 = ParseWhitespace(context);
 
-                if (Util.IsNewline(c) || Util.IsWhitespace(c) || c == '\uFEFF') {
-                    c = context.Read();
-                } else if (c == '/') {
-                    context.Read();
-                    c = context.Read();
+                if (res1.Found || escline || res2.Found) {
+                    nodespace = true;
+                }
 
-                    switch (c) {
-                        // Single line comment
-                        case '/':
-                            result.LineComment = true;
-                            ParseLineComment(context);
-                            break;
-                        // Multi-line comment
-                        case '*':
-                            ParseBlockComment(context);
-                            break;
-                        case '-':
-                            result.EscapeNext = true;
-                            break;
-                        default:
-                            throw new KdlException("Unexpected stray /.", context);
-                    }
-                } else {
-                    break;
+                char c = (char) context.Peek();
+                if ((!Util.IsWhitespace(c) && c != Util.BOM && c != '\\') || res1.StoppedAtLine || res2.StoppedAtLine) {
+                    return nodespace;
                 }
             }
-
-            return result;
         }
     }
 }
