@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 
 namespace Kadlet
 {
@@ -8,22 +9,21 @@ namespace Kadlet
     public class KdlParseContext
     {
         public PushBackReader Reader;
-        public bool EscapeNext;
-        public int LinePosition;
-        public int Line;
+        public SourceOffset Offset;
         public bool Invalid;
+        private char[] _char;
 
         public KdlParseContext(TextReader reader) {
             Reader = new PushBackReader(reader, 2);
-            EscapeNext = false;
-            LinePosition = 0;
-            Line = 1;
+            Offset = new SourceOffset{ Line = 1, Position = 1, Offset = 0 };
             Invalid = false;
+
+            _char = new char[1];
         }
 
         public string Abort() {
             Invalid = true;
-            return $"\nAt line {Line}, in position {LinePosition}.";
+            return $"\nAt line {Offset.Line}, in position {Offset.Position}.";
         }
 
         public int Read() {
@@ -33,15 +33,21 @@ namespace Kadlet
 
             int c = Reader.Read();
 
+            _char[0] = (char) c;
+            uint bytes = (uint) Encoding.UTF8.GetByteCount(_char);
+
+            Offset.Offset += bytes;
+
             if (Util.IsNewline(c)) {
                 if (c == '\u000D' && Reader.Peek() == '\u000A') {
                     c = Reader.Read();
+                    Offset.Offset++;
                 }
 
-                LinePosition = 0;
-                Line++;
+                Offset.Position = 1;
+                Offset.Line++;
             } else {
-                LinePosition++;
+                Offset.Position++;
             }
 
             return c;
@@ -55,8 +61,7 @@ namespace Kadlet
             return Reader.Peek();
         }
 
-        public void Unread(int c)
-        {
+        public void Unread(int c) {
             if (Invalid) {
                 throw new KdlException("Can't operate within an invalid context.", null);
             }
@@ -66,7 +71,11 @@ namespace Kadlet
             } else if (c == Util.EOF) {
                 throw new KdlException("Attempted to Unread() EOF.", null);
             } else {
-                LinePosition--;
+                _char[0] = (char)c;
+                uint bytes = (uint) Encoding.UTF8.GetByteCount(_char);
+                
+                Offset.Position -= bytes;
+                Offset.Offset -= bytes;
             }
 
             try {

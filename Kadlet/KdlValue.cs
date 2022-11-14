@@ -11,6 +11,9 @@ namespace Kadlet
     {
         /// <value>The type annotation for this value.</value>
         public string? Type { get; internal set; }
+
+        /// <value>A <see cref="SourceSpan"> indicating the start and end of the value token (and the property name, if applicable).</value>
+        public SourceSpan? SourceSpan { get; internal set; }
         
         protected KdlValue(string? type) {
             Type = type;

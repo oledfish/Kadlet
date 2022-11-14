@@ -28,6 +28,9 @@ namespace Kadlet
         /// <value>The depth of this node within the *root* document.</value>
         internal int HierarchyLevel { get; }
 
+        /// <value>A <see cref="SourceSpan"> indicating the start and end of the node in the document.</value>
+        public SourceSpan? SourceSpan { get; internal set; }
+
         public KdlNode(string identifier, string? type) {
             Identifier = identifier;
             Type = type;

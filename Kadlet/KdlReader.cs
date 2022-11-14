@@ -68,6 +68,8 @@ namespace Kadlet
         /// <exception cref="KdlException"/>
         internal KdlDocument Parse(KdlParseContext context, int level = 0) {
             List<KdlNode> nodes = new List<KdlNode>();
+            SourceOffset spanStart = context.Offset;
+            SourceOffset spanEnd = context.Offset;
 
             int c;
             while (true) {
@@ -80,12 +82,16 @@ namespace Kadlet
                         throw new KdlException("Expected to close child node but found EOF instead.", context);
                     }
 
+                    c = context.Read();
+                    spanEnd = context.Offset;
+
                     break;
                 }
 
                 // In case we're parsing child nodes
                 if (c == '}') {
                     if (level > 0) {
+                        spanEnd = context.Offset;
                         context.Read();
                         break;
                     } else {
@@ -102,7 +108,10 @@ namespace Kadlet
                 }
             };
 
-            return new KdlDocument(nodes);
+            KdlDocument document = new KdlDocument(nodes);
+            document.SourceSpan = new SourceSpan(spanStart, spanEnd);
+
+            return document;
         }
 
         /// <summary>
@@ -110,6 +119,8 @@ namespace Kadlet
         /// </summary>
         /// <exception cref="KdlException"/>
         internal KdlNode ParseNode(KdlParseContext context, int level = 0) {
+            SourceOffset nodeSpanStart = context.Offset;
+
             string? type = ParseType(context);
             string identifier = ParseIdentifier(context).Name;
 
@@ -182,24 +193,32 @@ namespace Kadlet
                 // but the tokens following immediately compose a valid value.
                 // This must throw, and we do it by checking if there's no space between.
                 if (!nodespace) {
+                    c = context.Read();
                     throw new KdlException("Arguments or properties must have space between them.", context);
                 }
 
+                SourceOffset spanStart = context.Offset;
                 IKdlObject obj = ParseArgumentOrProperty(context);
+                SourceOffset spanEnd = context.Offset;
 
                 // Ignore if we have an escape
                 if (!result.Escape && obj != null) {
                     if (obj is KdlProperty property) {
                         props[property.Key] = property.Value;
+                        props[property.Key].SourceSpan = new SourceSpan(spanStart, spanEnd);
                     }
 
                     if (obj is KdlValue argument) {
+                        argument.SourceSpan = new SourceSpan(spanStart, spanEnd);
                         args.Add(argument);
                     }
                 }
             }
 
+            SourceOffset nodeSpanEnd = context.Offset;
+
             KdlNode node = new KdlNode(identifier, type, args, props, children, level);
+            node.SourceSpan = new SourceSpan(nodeSpanStart, nodeSpanEnd);
             return node;
         }
 
@@ -289,10 +308,9 @@ namespace Kadlet
             if (c == '(') {
                 context.Read();
                 string type = ParseIdentifier(context).Name;
-                c = context.Peek();
+                c = context.Read();
 
                 if (c == ')') {
-                    context.Read();
                     return type;
                 } else {
                     throw new KdlException($"Expected ) to close type annotation, found '{(char) c}'.", context);
@@ -535,7 +553,7 @@ namespace Kadlet
                             }
                             break;
                         default:
-                            // If we can't find any escape, we make sure to print the '\' regardless
+                            // TODO: this will be an error on KDL v2
                             builder.Append('\\');
                             break;
                     }

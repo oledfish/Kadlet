@@ -10,7 +10,11 @@ namespace Kadlet
     /// </summary>
     public class KdlDocument : IKdlObject
     {
+        /// <value>A list of all the <see cref="KdlNode">s found in the document.</value>
         public IReadOnlyList<KdlNode> Nodes { get; }
+
+        /// <value>A <see cref="SourceSpan"> indicating the start and end of the document.</value>
+        public SourceSpan? SourceSpan { get; internal set; }
 
         public KdlDocument(IReadOnlyList<KdlNode> nodes) {
             Nodes = nodes;
@@ -55,8 +59,7 @@ namespace Kadlet
             return Nodes.SequenceEqual(other.Nodes);
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             HashCode hash = new HashCode();
 
             foreach (KdlNode node in Nodes)
