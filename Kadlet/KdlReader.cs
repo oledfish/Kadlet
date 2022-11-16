@@ -24,6 +24,7 @@ namespace Kadlet
             _options.TypeConverters["ipv6"] = KdlConvert.ToIpAddress;
             _options.TypeConverters["regex"] = KdlConvert.ToRegex;
             _options.TypeConverters["base64"] = KdlConvert.ToBase64;
+            _options.TypeConverters["uuid"] = KdlConvert.ToGuid;
         }
 
         public KdlReader(KdlReaderOptions options) : base() {

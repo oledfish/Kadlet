@@ -148,6 +148,11 @@ namespace Kadlet
             return new KdlByteArray(array, type);
         }
 
+        public static KdlValue ToGuid(string input, string type, KdlReaderOptions optionns) {
+            Guid uuid = Guid.ParseExact(input, "D");
+            return new KdlGuid(uuid, type);
+        }
+
         #endregion
     }
 }
