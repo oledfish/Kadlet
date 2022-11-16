@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Globalization;
@@ -27,30 +28,30 @@ namespace Kadlet
         }
 
         #region Numeric
-        public static KdlFloat32 ToFloat32(string input, int radix, DecimalResult result, string? type) {
+        public static KdlFloat32 ToFloat32(string input, int radix, KdlDecimalFormat format, string? type) {
             if (radix != 10) {
                 throw new KdlException($"Floating point numbers must be in base 10, received {input}.", null);
             }
 
-            return new KdlFloat32(Convert.ToSingle(input, Culture), input, result.HasPoint, result.HasExponent, result.OnlyZeroes, type);
+            return new KdlFloat32(Convert.ToSingle(input, Culture), input, format, type);
         }
         
-        public static KdlFloat64 ToFloat64(string input, int radix, DecimalResult result, string? type) {
+        public static KdlFloat64 ToFloat64(string input, int radix, KdlDecimalFormat format, string? type) {
             if (radix != 10) {
                 throw new KdlException($"Floating point numbers must be in base 10, received {input}.", null);
             }
 
-            return new KdlFloat64(Convert.ToDouble(input, Culture), input, result.HasPoint, result.HasExponent, result.OnlyZeroes, type);
+            return new KdlFloat64(Convert.ToDouble(input, Culture), input, format, type);
         }
 
-        public static KdlDecimal ToDecimal(string input, int radix, DecimalResult result, string? type) {
+        public static KdlDecimal ToDecimal(string input, int radix, KdlDecimalFormat format, string? type) {
             if (radix != 10) {
                 throw new KdlException($"Floating point numbers must be in base 10, received {input}.", null);
             }
 
             NumberStyles styles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
             decimal number = Decimal.Parse(input, styles, Culture);
-            return new KdlDecimal(number, input, result.HasPoint, result.HasExponent, result.OnlyZeroes, type);
+            return new KdlDecimal(number, input, format, type);
         }
 
         public static KdlUInt8 ToUInt8(string input, int radix, string? type = null) {
@@ -109,12 +110,13 @@ namespace Kadlet
         }
 
         public static KdlValue ToDecimal(string input, string type, KdlReaderOptions options) {
-            bool point = input.Contains(".");
-            bool exponent = input.Contains("e") || input.Contains("E");
+            StringReader reader = new StringReader(input);
+            KdlReader kdl = new KdlReader();
+            DecimalResult result = kdl.ParseDecimal(new KdlParseContext(reader));
 
             NumberStyles styles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
             decimal number = Decimal.Parse(input, styles, Culture);
-            return new KdlDecimal(number, input, type);
+            return new KdlDecimal(number, input, result.Format, type);
         }
 
         public static KdlValue ToIpAddress(string input, string type, KdlReaderOptions options) {

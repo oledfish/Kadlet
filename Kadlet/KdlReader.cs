@@ -782,13 +782,13 @@ namespace Kadlet
                     case "i64":
                         return KdlConvert.ToInt64(data, sign, radix, type);
                     case "f32":
-                        return KdlConvert.ToFloat32(data, radix, result, type);
+                        return KdlConvert.ToFloat32(data, radix, result.Format, type);
                     case "f64":
                     case "decimal64":
-                        return KdlConvert.ToFloat64(data, radix, result, type);
+                        return KdlConvert.ToFloat64(data, radix, result.Format, type);
                     case "decimal":
                     case "decimal128":
-                        return KdlConvert.ToDecimal(data, radix, result, type);
+                        return KdlConvert.ToDecimal(data, radix, result.Format, type);
                     // case "isize":
                     // case "usize":
                 }
@@ -796,14 +796,14 @@ namespace Kadlet
 
             // Only try parsing as float if we know it has a dot or an exponent
             // We use 64-bits regardless of size
-            if (result.HasPoint || result.HasExponent) {
+            if (result.Format.HasFlag(KdlDecimalFormat.HasPoint) || result.Format.HasFlag(KdlDecimalFormat.HasExponent)) {
                 if (_options.PreferSingle) {
-                    return KdlConvert.ToFloat32(data, radix, result, type);
+                    return KdlConvert.ToFloat32(data, radix, result.Format, type);
                 } else if (_options.PreferDecimal) {
-                    return KdlConvert.ToDecimal(data, radix, result, type);
+                    return KdlConvert.ToDecimal(data, radix, result.Format, type);
                 }
 
-                return KdlConvert.ToFloat64(data, radix, result, type);
+                return KdlConvert.ToFloat64(data, radix, result.Format, type);
             }
 
             // Otherwise, the number must be an integer
@@ -851,17 +851,15 @@ namespace Kadlet
             StringBuilder builder = new StringBuilder();
             int c = context.Peek();
 
-            bool point = false;
-            bool exponent = false;
-            bool onlyZeroes = true;
-
+            KdlDecimalFormat format = KdlDecimalFormat.OnlyZeroes;
+            
             // Integer part
             while (true) {
                 c = context.Peek();
 
                 if (Util.IsDecimalDigit(c)) {
                     if (c != '0') {
-                        onlyZeroes = false;
+                        format &= ~KdlDecimalFormat.OnlyZeroes;
                     }
 
                     c = context.Read();
@@ -889,7 +887,7 @@ namespace Kadlet
 
                     if (Util.IsDecimalDigit(c)) {
                         if (c != '0') {
-                            onlyZeroes = false;
+                            format &= ~KdlDecimalFormat.OnlyZeroes;
                         }
 
                         c = context.Read();
@@ -901,7 +899,7 @@ namespace Kadlet
                     }
                 }
 
-                point = true;
+                format |= KdlDecimalFormat.HasPoint;
             }
 
             // Exponent part
@@ -935,14 +933,12 @@ namespace Kadlet
                     }
                 }
 
-                exponent = true;
+                format |= KdlDecimalFormat.HasExponent;
             }
 
             return new DecimalResult {
                 String = builder.ToString(),
-                HasPoint = point,
-                HasExponent = exponent,
-                OnlyZeroes = onlyZeroes
+                Format = format
             };
         }
 

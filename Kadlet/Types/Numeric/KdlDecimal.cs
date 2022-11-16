@@ -11,31 +11,17 @@ namespace Kadlet
     /// </summary>
     public class KdlDecimal : KdlNumber<decimal> 
     {
-        internal KdlDecimal(decimal value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
+        internal KdlDecimal(decimal value, string source, KdlDecimalFormat format, string? type = null)
             : base(value, source, type)
         {
-            HasPoint = point;
-            HasExponent = exponent;
-            OnlyZeroes = onlyZeroes;
+            Format = format;
         }
 
-        public KdlDecimal(decimal value, string source, string? type = null)
-            : base(value, source, type)
-        {
-            HasPoint = source.Contains(".");
-            HasExponent = source.Contains("E") || source.Contains("e");
-            OnlyZeroes = false;
-        }
-
-        public KdlDecimal(decimal value, string? type = null) : base(value, type) {
-            HasPoint = false;
-            HasExponent = false;
-            OnlyZeroes = false;
-        }
+        public KdlDecimal(decimal value, string? type = null) : base(value, type) { }
 
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {
-            if (HasExponent) {
-                string format = HasPoint ? "E1" : "E0";
+            if (Format.HasFlag(KdlDecimalFormat.HasExponent)) {
+                string format = Format.HasFlag(KdlDecimalFormat.HasPoint) ? "E1" : "E0";
 
                 writer.Write(Value
                     .ToString(format, CultureInfo.GetCultureInfo("en-US"))

@@ -1,18 +1,25 @@
+using System;
 using System.IO;
 using System.Diagnostics;
 
 namespace Kadlet
 {
+    [Flags]
+    public enum KdlDecimalFormat {
+        None = 0,
+        HasPoint = 1,
+        HasExponent = 2,
+        OnlyZeroes = 4
+    }
+
     /// <summary>
     /// A <see cref="KdlValue"/> with some extra fields for numbers.
     /// </summary>
     [DebuggerDisplay("{Value}")]
     public abstract class KdlNumber<T> : KdlValue<T>
-    {   
-        public string? SourceString { get; } 
-        protected bool HasPoint = false;
-        protected bool HasExponent = false;
-        protected bool OnlyZeroes = false;
+    {
+        public string? SourceString { get; internal set; }
+        public KdlDecimalFormat Format { get; protected set; } = KdlDecimalFormat.None;
         
         public KdlNumber(T value, string source, string? type = null) : base(value, type) {
             SourceString = source;

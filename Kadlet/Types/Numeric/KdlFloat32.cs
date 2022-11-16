@@ -11,32 +11,18 @@ namespace Kadlet
     /// </summary>
     public class KdlFloat32 : KdlNumber<float> 
     {
-        internal KdlFloat32(float value, string source, bool point, bool exponent, bool onlyZeroes, string? type = null)
+        internal KdlFloat32(float value, string source, KdlDecimalFormat format, string? type = null)
             : base(value, source, type)
         {
-            HasPoint = point;
-            HasExponent = exponent;
-            OnlyZeroes = onlyZeroes;
+            Format = format;
         }
 
-        public KdlFloat32(float value, string source, string? type = null)
-            : base(value, source, type)
-        {
-            HasPoint = source.Contains(".");
-            HasExponent = source.Contains("E") || source.Contains("e");
-            OnlyZeroes = false;
-        }
-
-        public KdlFloat32(float value, string? type = null) : base(value, type) {
-            HasPoint = false;
-            HasExponent = false;
-            OnlyZeroes = false;
-        }
+        public KdlFloat32(float value, string? type = null) : base(value, type) { }
 
         public override void WriteValue(TextWriter writer, KdlPrintOptions options) {
             // Edge cases where a value too large or too small was rounded to infinity or zero,
             // we rely on the original string to round-trip
-            if (SourceString != null && (Single.IsInfinity(Value) || Value == 0 && !OnlyZeroes)) {
+            if (SourceString != null && (Single.IsInfinity(Value) || Value == 0 && !Format.HasFlag(KdlDecimalFormat.OnlyZeroes))) {
                 writer.Write(SourceString
                     .Replace('E', options.ExponentChar)
                     .Replace('e', options.ExponentChar)
@@ -71,8 +57,8 @@ namespace Kadlet
                 }
             }
 
-            if (HasExponent) {
-                string format = HasPoint ? "E1" : "E0";
+            if (Format.HasFlag(KdlDecimalFormat.HasExponent)) {
+                string format = Format.HasFlag(KdlDecimalFormat.HasPoint) ? "E1" : "E0";
 
                 writer.Write(Value
                     .ToString(format, CultureInfo.GetCultureInfo("en-US"))
