@@ -49,7 +49,7 @@ namespace Kadlet
                 throw new KdlException($"Floating point numbers must be in base 10, received {input}.", null);
             }
 
-            NumberStyles styles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
+            NumberStyles styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
             decimal number = Decimal.Parse(input, styles, Culture);
             return new KdlDecimal(number, input, format, type);
         }
@@ -114,7 +114,7 @@ namespace Kadlet
             KdlReader kdl = new KdlReader();
             DecimalResult result = kdl.ParseDecimal(new KdlParseContext(reader));
 
-            NumberStyles styles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
+            NumberStyles styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
             decimal number = Decimal.Parse(input, styles, Culture);
             return new KdlDecimal(number, input, result.Format, type);
         }
