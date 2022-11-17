@@ -71,19 +71,31 @@ namespace Kadlet
         }
         
         public static KdlInt8 ToInt8(string input, sbyte sign, int radix, string? type = null) {
-            return new KdlInt8((sbyte) (Convert.ToSByte(input, radix) * sign), input, type);
+            byte container = Convert.ToByte(input, radix);
+            return new KdlInt8((sbyte) (container * sign), input, type);
         }
         
         public static KdlInt16 ToInt16(string input, short sign, int radix, string? type = null) {
-            return new KdlInt16((short) (Convert.ToInt16(input, radix) * sign), input, type);
+            ushort container = Convert.ToUInt16(input, radix);
+            return new KdlInt16((short) (container * sign), input, type);
         }
         
         public static KdlInt32 ToInt32(string input, int sign, int radix, string? type = null) {
-            return new KdlInt32(Convert.ToInt16(input, radix) * sign, input, type);
+            uint container = Convert.ToUInt32(input, radix);
+            return new KdlInt32((int) (container * sign), input, type);
         }
-        
+
         public static KdlInt64 ToInt64(string input, int sign, int radix, string? type = null) {
-            return new KdlInt64(Convert.ToInt64(input, radix) * sign, input, type);
+            ulong container = Convert.ToUInt64(input, radix);
+            long data = (long) container;
+
+            if (sign == -1) {
+                unchecked {
+                    data = (long) (0UL - container);
+                }
+            }
+
+            return new KdlInt64(data, input, type);
         }
 
         #endregion

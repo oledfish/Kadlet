@@ -775,13 +775,13 @@ namespace Kadlet
                     case "u64":
                         return KdlConvert.ToUInt64(data, radix, type);
                     case "i8":
-                        return KdlConvert.ToInt8(data, (sbyte) sign, radix, type);
+                        return KdlConvert.ToInt8(trim, (sbyte) sign, radix, type);
                     case "i16":
-                        return KdlConvert.ToInt16(data, (short) sign, radix, type);
+                        return KdlConvert.ToInt16(trim, (short) sign, radix, type);
                     case "i32":
-                        return KdlConvert.ToInt32(data, sign, radix, type);
+                        return KdlConvert.ToInt32(trim, sign, radix, type);
                     case "i64":
-                        return KdlConvert.ToInt64(data, sign, radix, type);
+                        return KdlConvert.ToInt64(trim, sign, radix, type);
                     case "f32":
                         return KdlConvert.ToFloat32(data, radix, result.Format, type);
                     case "f64":
