@@ -218,7 +218,7 @@ namespace Kadlet
 
             SourceOffset nodeSpanEnd = context.Offset;
 
-            KdlNode node = new KdlNode(identifier, type, args, props, children, level);
+            KdlNode node = new KdlNode(identifier, type, args, props, children);
             node.SourceSpan = new SourceSpan(nodeSpanStart, nodeSpanEnd);
             return node;
         }

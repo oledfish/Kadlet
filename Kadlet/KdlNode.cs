@@ -25,9 +25,6 @@ namespace Kadlet
         /// <value>A <see cref="KdlDocument"/> containing any children nodes.</value>
         public KdlDocument? Children { get; }
 
-        /// <value>The depth of this node within the *root* document.</value>
-        internal int HierarchyLevel { get; }
-
         /// <value>A <see cref="SourceSpan"> indicating the start and end of the node in the document.</value>
         public SourceSpan? SourceSpan { get; internal set; }
 
@@ -38,13 +35,12 @@ namespace Kadlet
             Properties = new Dictionary<string, KdlValue>();
         }
 
-        public KdlNode(string identifier, string? type, IReadOnlyList<KdlValue> arguments, IReadOnlyDictionary<string, KdlValue> properties, KdlDocument? children, int hierarchyLevel) {
+        public KdlNode(string identifier, string? type, IReadOnlyList<KdlValue> arguments, IReadOnlyDictionary<string, KdlValue> properties, KdlDocument? children) {
             Identifier = identifier;
             Type = type;
             Arguments = arguments;
             Properties = properties;
             Children = children;
-            HierarchyLevel = hierarchyLevel;
         }
 
         public string ToKdlString() {
@@ -59,7 +55,11 @@ namespace Kadlet
         }
 
         public void Write(TextWriter writer, KdlPrintOptions options) {
-            for (int i = 0; i < HierarchyLevel; i++)
+            Write(writer, options, 0);
+        }
+
+        public void Write(TextWriter writer, KdlPrintOptions options, int level = 0) {
+            for (int i = 0; i < level; i++)
                 writer.Write(new string(options.IndentChar, options.IndentSize));
 
             if (Type != null) {
@@ -91,9 +91,9 @@ namespace Kadlet
             if (Children != null && Children.Nodes.Count > 0) {
                 writer.Write(" {");
                 writer.Write(options.Newline);
-                Children.Write(writer, options);
+                Children.Write(writer, options, level + 1);
 
-                for (int i = 0; i < HierarchyLevel; i++)
+                for (int i = 0; i < level; i++)
                     writer.Write(new string(options.IndentChar, options.IndentSize));
 
                 writer.Write("}");

@@ -32,17 +32,21 @@ namespace Kadlet
         }
 
         public void Write(TextWriter writer) {
-            Write(writer, KdlPrintOptions.PrettyPrint);
+            Write(writer, KdlPrintOptions.PrettyPrint, 0);
         }
 
         public void Write(TextWriter writer, KdlPrintOptions options) {
+            Write(writer, options, 0);
+        }
+
+        public void Write(TextWriter writer, KdlPrintOptions options, int level = 0) {
             if (Nodes.Count == 0) {
                 writer.Write(options.Newline);
                 return;
             } 
 
             foreach (KdlNode node in Nodes) {
-                node.Write(writer, options);
+                node.Write(writer, options, level);
                 writer.Write(options.Newline);
             }
         }
