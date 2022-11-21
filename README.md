@@ -57,14 +57,14 @@ int f32 = ((KdlFloat32) overrides.Nodes[0][1]).Value; // -123.0
 
 All numeric overrides are supported save for ``isize`` and ``usize``, which are ignored. The following string overrides are supported.
 
-* ``date-time`` (KdlDateTime)
-* ``date`` (KdlDateTime)
-* ``time`` (KdlTimeSpan)
-* ``decimal`` (KdlDecimal)
-* ``ipv4`` (KdlIp)
-* ``ìpv6`` (KdlIp)
-* ``regex`` (KdlRegex)
-* ``base64`` (KdlByteArray)
+* ``date-time`` (KdlDateTime, wrapping ``System.DateTime``)
+* ``date`` (KdlDateTime, wrapping ``System.DateTime``)
+* ``time`` (KdlTimeSpan, wrapping ``System.TimeSpan``)
+* ``decimal`` (KdlDecimal, wrapping ``decimal``)
+* ``ipv4`` (KdlIp, wrapping ``System.Net.IPAddress``)
+* ``ìpv6`` (KdlIp, wrapping ``System.Net.IPAddress``)
+* ``regex`` (KdlRegex, wrapping ``System.Text.RegularExpressions.Regex``)
+* ``base64`` (KdlByteArray, wrapping ``byte[]``)
 
 ## Custom type annotations
 
