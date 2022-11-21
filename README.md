@@ -29,6 +29,18 @@ The resulting ``KdlDocument`` can be traversed or written back into a stream or 
 
 The values in properties and arguments are encapsulated in a wrapper ``KdlValue<T>`` object, of which there are derivations for most commonly used types. Integers are returned as a ``KdlInt32`` (int), a ``KdlInt64`` (long), or a ``KdlBigInteger`` depending on their size. Floating point numbers are returned as a ``KdlFloat64`` by default.
 
+```csharp
+string kdl = "node -1000 1.23 example=\"this is a string\" hex=0xDEADBEEF";
+
+KdlDocument document = reader.Parse(kdl);
+KdlNode node = document.Nodes[0];
+
+int negative = ((KdlInt32) node.Arguments[0]).Value; // -1000
+double fp = ((KdlFloat64) node[1]).Value; // 1.23 (also indexable directly from the node)
+string str = ((KdlString) node.Properties["example"]).Value; // "this is a string"
+long hex = ((KdlInt64) node["hex"]).Value; // 3735928559
+```
+
 ## Type annotations
 
 Kadlet supports [type annotation overrides](https://github.com/kdl-org/kdl/blob/main/SPEC.md#type-annotation), instructing the parser to interpret annotated values differently according to their type.
@@ -39,24 +51,20 @@ KdlDocument overrides = reader.Parse(@"
     node (f32)123
 ");
 
-Console.Write(overrides.ToKdlString());
-
-// Output:
-//
-// node (u8)123 // Internally a KdlUInt8
-// node (f32)123.0 // Interally a KdlFloat32
+int u8 = ((KdlUInt8) overrides.Nodes[0][0]).Value; // 123
+int f32 = ((KdlFloat32) overrides.Nodes[0][1]).Value; // -123.0
 ```
 
 All numeric overrides are supported save for ``isize`` and ``usize``, which are ignored. The following string overrides are supported.
 
-* ``date-time``
-* ``date``
-* ``time``
-* ``decimal``
-* ``ipv4``
-* ``ìpv6``
-* ``regex``
-* ``base64``
+* ``date-time`` (KdlDateTime)
+* ``date`` (KdlDateTime)
+* ``time`` (KdlTimeSpan)
+* ``decimal`` (KdlDecimal)
+* ``ipv4`` (KdlIp)
+* ``ìpv6`` (KdlIp)
+* ``regex`` (KdlRegex)
+* ``base64`` (KdlByteArray)
 
 ## Custom type annotations
 
@@ -79,10 +87,13 @@ KdlReader reader = new KdlReader(new KdlReaderOptions {
 string kdl = "node (hex)\"5F3759DF\" (color)\"green\"";
 
 KdlDocument doc = reader.Parse(kdl);
+
+byte[] hex = ((KdlByteArray) doc.Nodes[0][0]).Value; // {0x5F, 0x37, 0x59, 0xDF}
+Color color = (Color) ((KdlEnum) doc.Nodes[0][1]).Value; // Color.Green
 Console.Write(doc.ToKdlString());
 
 // Output:
-// node (hex)"XzdZ3w== (color)"Green"
+// node (hex)"XzdZ3w==" (color)"Green"
 ```
 
 # Remarks
